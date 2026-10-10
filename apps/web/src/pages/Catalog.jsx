@@ -1,0 +1,327 @@
+import React, { useState, useEffect } from 'react';
+import { useAtom } from 'jotai';
+import { activeCategoryAtom, searchQueryAtom, cartAtom, notificationAtom, activeTabAtom } from '../store/atoms';
+import { CATEGORIES, COMPANY_DETAILS } from '../data/productsData';
+import { productsApi } from '../services/apiClient';
+import { Search, Filter, Plus, Minus, ShoppingBag, Download, Grid, Table as TableIcon, Check } from 'lucide-react';
+
+export default function Catalog() {
+  const [activeCategory, setActiveCategory] = useAtom(activeCategoryAtom);
+  const [searchQuery, setSearchQuery] = useAtom(searchQueryAtom);
+  const [cart, setCart] = useAtom(cartAtom);
+  const [, setNotification] = useAtom(notificationAtom);
+  const [, setActiveTab] = useAtom(activeTabAtom);
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+  const [quantities, setQuantities] = useState({});
+
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      const data = await productsApi.getProducts(activeCategory, searchQuery);
+      setProducts(data);
+      setLoading(false);
+    }
+    loadProducts();
+  }, [activeCategory, searchQuery]);
+
+  const handleQuantityChange = (productId, delta) => {
+    setQuantities((prev) => {
+      const current = prev[productId] || 1;
+      const next = Math.max(1, current + delta);
+      return { ...prev, [productId]: next };
+    });
+  };
+
+  const handleAddToCart = (product) => {
+    const qty = quantities[product.id] || 1;
+    setCart((prevCart) => {
+      const existing = prevCart.find((i) => i.product.id === product.id);
+      if (existing) {
+        return prevCart.map((i) =>
+          i.product.id === product.id ? { ...i, quantity: i.quantity + qty } : i
+        );
+      }
+      return [...prevCart, { product, quantity: qty }];
+    });
+
+    setNotification(`Added ${qty} ${product.unit} of ${product.name} to order builder!`);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white rounded-3xl p-8 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <div className="flex items-center gap-2 text-brand-gold font-bold text-xs uppercase tracking-wider mb-1">
+            <span>Official Price List (No 1–56)</span>
+            <span>•</span>
+            <span>Valid until {COMPANY_DETAILS.validityDate}</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold font-heading">
+            Produce Catalog & Wholesale Prices
+          </h1>
+          <p className="text-brand-100 text-sm mt-1 max-w-xl">
+            Browse our full selection of 56 fresh agricultural items with transparent Rwandan Franc (RWF) pricing for B2B procurement.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href={COMPANY_DETAILS.pdfPath}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-brand-gold hover:bg-yellow-400 text-brand-900 font-bold px-5 py-2.5 rounded-xl shadow flex items-center gap-2 text-sm transition-all"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Official PDF</span>
+          </a>
+          <button
+            onClick={() => setActiveTab('order')}
+            className="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2.5 rounded-xl border border-white/20 text-sm flex items-center gap-2 transition-all"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span>View Order Cart</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Controls Bar: Search, Category Pills, View Mode */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+          
+          {/* Search Box */}
+          <div className="relative w-full md:w-96">
+            <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by English name or Kinyarwanda..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm bg-gray-50/50"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 bg-gray-200 px-1.5 py-0.5 rounded"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center gap-2 self-end md:self-auto">
+            <span className="text-xs font-semibold text-gray-500">View:</span>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-brand-700 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-brand-700 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <TableIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Category Scrollable Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {CATEGORIES.map((cat) => {
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  isActive
+                    ? 'bg-brand-800 text-white shadow-md shadow-brand-800/20'
+                    : 'bg-white text-gray-700 hover:bg-brand-50 border border-gray-200'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Item Count Indicator */}
+      <div className="flex justify-between items-center text-xs text-gray-500 font-semibold px-1">
+        <span>Showing {products.length} produce items</span>
+        <span>All prices in Rwandan Francs (RWF)</span>
+      </div>
+
+      {/* Products Display */}
+      {loading ? (
+        <div className="py-20 text-center space-y-4">
+          <div className="w-10 h-10 border-4 border-brand-700 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-500 text-sm font-medium">Loading V&F fresh produce list...</p>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 space-y-4">
+          <p className="text-gray-500 text-base font-semibold">No produce items match your search filter "{searchQuery}".</p>
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setActiveCategory('All Products');
+            }}
+            className="bg-brand-700 text-white font-bold text-xs px-4 py-2 rounded-xl"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : viewMode === 'grid' ? (
+        /* Grid View */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products.map((item) => {
+            const qty = quantities[item.id] || 1;
+            const inCart = cart.find((i) => i.product.id === item.id);
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between card-hover relative group"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="bg-brand-50 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded border border-brand-200">
+                      {item.category}
+                    </span>
+                    <span className="text-xs text-gray-400 font-mono font-bold">#{item.id}</span>
+                  </div>
+
+                  <h3 className="font-bold text-base text-gray-900 leading-snug">{item.name}</h3>
+                  {item.kinyarwanda && (
+                    <p className="text-xs text-brand-700 font-semibold italic mt-0.5">
+                      "{item.kinyarwanda}"
+                    </p>
+                  )}
+
+                  <div className="mt-4 pt-3 border-t border-gray-100 flex items-baseline justify-between">
+                    <span className="text-xs text-gray-500">Unit Price</span>
+                    <p className="font-extrabold text-lg text-brand-900 font-heading">
+                      {item.price.toLocaleString()} <span className="text-xs text-gray-600 font-normal">RWF / {item.unit}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quantity & Add to Cart */}
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-center justify-between bg-gray-50 p-1.5 rounded-xl border border-gray-200">
+                    <span className="text-xs text-gray-500 font-medium px-2">Qty ({item.unit}):</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleQuantityChange(item.id, -1)}
+                        className="w-7 h-7 bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center hover:bg-gray-100"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="w-8 text-center text-sm font-bold text-gray-900">{qty}</span>
+                      <button
+                        onClick={() => handleQuantityChange(item.id, 1)}
+                        className="w-7 h-7 bg-white text-gray-700 rounded-lg shadow-sm border border-gray-200 flex items-center justify-center hover:bg-gray-100"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleAddToCart(item)}
+                    className={`w-full font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${
+                      inCart
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-brand-700 hover:bg-brand-800 text-white'
+                    }`}
+                  >
+                    {inCart ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>In Order ({inCart.quantity} {item.unit})</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Add to Order Builder</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Table View */
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-brand-900 text-white text-xs font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-3.5 px-4">No</th>
+                  <th className="py-3.5 px-4">Item Description</th>
+                  <th className="py-3.5 px-4">Kinyarwanda Name</th>
+                  <th className="py-3.5 px-4">Category</th>
+                  <th className="py-3.5 px-4">Unit</th>
+                  <th className="py-3.5 px-4 text-right">Price (RWF)</th>
+                  <th className="py-3.5 px-4 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {products.map((item) => {
+                  const inCart = cart.find((i) => i.product.id === item.id);
+                  return (
+                    <tr key={item.id} className="hover:bg-brand-50/50 transition-colors">
+                      <td className="py-3 px-4 font-mono text-gray-500 font-bold">{item.id}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900">{item.name}</td>
+                      <td className="py-3 px-4 text-brand-700 font-medium italic">{item.kinyarwanda || '—'}</td>
+                      <td className="py-3 px-4">
+                        <span className="bg-gray-100 text-gray-700 text-[11px] font-semibold px-2 py-0.5 rounded">
+                          {item.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-mono font-medium text-gray-600">{item.unit}</td>
+                      <td className="py-3 px-4 text-right font-extrabold text-brand-900 font-heading text-base">
+                        {item.price.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => handleAddToCart(item)}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs inline-flex items-center gap-1 shadow-sm transition-colors ${
+                            inCart
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-brand-700 hover:bg-brand-800 text-white'
+                          }`}
+                        >
+                          {inCart ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                          <span>{inCart ? `Added (${inCart.quantity})` : 'Add'}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

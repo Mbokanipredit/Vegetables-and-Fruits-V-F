@@ -1,0 +1,86 @@
+// Prisma schema for Vegetables & Fruits V&F
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  kinyarwanda String?
+  unit        String   // kg, pcs, bdl, sachet, barquette, pack
+  price       Float    // Price in RWF
+  category    String
+  popular     Boolean  @default(false)
+  inStock     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems  OrderItem[]
+}
+
+enum ClientType {
+  HOTEL
+  RESTAURANT
+  RESIDENCE
+  SUPERMARKET
+  CATERING
+  INSTITUTION
+  OTHER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  companyName   String
+  clientType    ClientType  @default(HOTEL)
+  contactPerson String
+  email         String
+  phone         String
+  address       String
+  deliveryDate  String?
+  notes         String?
+  totalAmount   Float
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   Int?
+  product     Product? @relation(fields: [productId], references: [id])
+  productName String
+  unit        String
+  price       Float
+  quantity    Float
+  subtotal    Float
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  message   String
+  status    String   @default("UNREAD")
+  createdAt DateTime @default(now())
+}
