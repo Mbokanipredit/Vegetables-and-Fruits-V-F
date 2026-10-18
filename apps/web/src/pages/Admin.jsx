@@ -6,12 +6,14 @@ import {
   ShieldCheck, ShoppingBag, Clock, CheckCircle2, XCircle, 
   Search, RefreshCw, FileText, Phone, Mail, MapPin, Eye, Lock, LogOut, UserCircle 
 } from 'lucide-react';
+import { useLang } from '../i18n/useLang';
 
 function AdminLogin({ onLoggedIn }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t } = useLang();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,15 +35,15 @@ function AdminLogin({ onLoggedIn }) {
           <div className="w-14 h-14 mx-auto rounded-2xl bg-brand-900 text-brand-gold flex items-center justify-center shadow-md">
             <Lock className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-extrabold text-gray-900 font-heading">Admin sign in</h1>
-          <p className="text-xs text-gray-500">Restricted to V&amp;F staff.</p>
+          <h1 className="text-xl font-extrabold text-gray-900 font-heading">{t('admin.signIn')}</h1>
+          <p className="text-xs text-gray-500">{t('admin.restricted')}</p>
         </div>
         <input
           id="admin-email"
           type="email"
           required
           autoComplete="username"
-          placeholder="Admin email"
+          placeholder={t('admin.adminEmail')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -51,7 +53,7 @@ function AdminLogin({ onLoggedIn }) {
           type="password"
           required
           autoComplete="current-password"
-          placeholder="Password"
+          placeholder={t('account.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -63,7 +65,7 @@ function AdminLogin({ onLoggedIn }) {
           disabled={loading}
           className="w-full bg-brand-900 hover:bg-brand-800 disabled:opacity-60 text-white font-bold py-2.5 rounded-xl transition-colors"
         >
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? t('admin.signingIn') : t('admin.signInBtn')}
         </button>
       </form>
     </div>

@@ -4,6 +4,7 @@ import { activeCategoryAtom, searchQueryAtom, cartAtom, notificationAtom, active
 import { CATEGORIES, COMPANY_DETAILS } from '../data/productsData';
 import { productsApi } from '../services/apiClient';
 import { Search, Filter, Plus, Minus, ShoppingBag, Download, Grid, Table as TableIcon, Check } from 'lucide-react';
+import { useLang } from '../i18n/useLang';
 
 export default function Catalog() {
   const [activeCategory, setActiveCategory] = useAtom(activeCategoryAtom);
@@ -11,10 +12,11 @@ export default function Catalog() {
   const [cart, setCart] = useAtom(cartAtom);
   const [, setNotification] = useAtom(notificationAtom);
   const [, setActiveTab] = useAtom(activeTabAtom);
+  const { t } = useLang();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+  const [viewMode, setViewMode] = useState('grid');
   const [quantities, setQuantities] = useState({});
 
   useEffect(() => {
@@ -46,8 +48,7 @@ export default function Catalog() {
       }
       return [...prevCart, { product, quantity: qty }];
     });
-
-    setNotification(`Added ${qty} ${product.unit} of ${product.name} to your cart!`);
+    setNotification(`${t('common.added').replace('!', '')} ${product.name}!`);
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -57,15 +58,15 @@ export default function Catalog() {
       <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white rounded-3xl p-8 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-2 text-brand-gold font-bold text-xs uppercase tracking-wider mb-1">
-            <span>Official Price List (No 1–56)</span>
+            <span>{t('catalog.headerLabel')}</span>
             <span>•</span>
-            <span>Valid until {COMPANY_DETAILS.validityDate}</span>
+            <span>{t('catalog.validUntil')} {COMPANY_DETAILS.validityDate}</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold font-heading">
-            Produce Catalog & Wholesale Prices
+            {t('catalog.title')}
           </h1>
           <p className="text-brand-100 text-sm mt-1 max-w-xl">
-            Browse our full selection of 56 fresh agricultural items with transparent Rwandan Franc (RWF) pricing for B2B procurement.
+            {t('catalog.desc')}
           </p>
         </div>
 
@@ -77,19 +78,19 @@ export default function Catalog() {
             className="bg-brand-gold hover:bg-yellow-400 text-brand-900 font-bold px-5 py-2.5 rounded-xl shadow flex items-center gap-2 text-sm transition-all"
           >
             <Download className="w-4 h-4" />
-            <span>Download Official PDF</span>
+            <span>{t('catalog.downloadPdf')}</span>
           </a>
           <button
             onClick={() => setActiveTab('order')}
             className="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2.5 rounded-xl border border-white/20 text-sm flex items-center gap-2 transition-all"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>View Order Cart</span>
+            <span>{t('catalog.viewCart')}</span>
           </button>
         </div>
       </div>
 
-      {/* Controls Bar: Search, Category Pills, View Mode */}
+      {/* Controls Bar */}
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
           
@@ -98,7 +99,7 @@ export default function Catalog() {
             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by English name or Kinyarwanda..."
+              placeholder={t('catalog.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm bg-gray-50/50"
@@ -108,14 +109,14 @@ export default function Catalog() {
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 bg-gray-200 px-1.5 py-0.5 rounded"
               >
-                Clear
+                {t('catalog.clear')}
               </button>
             )}
           </div>
 
           {/* View Toggle */}
           <div className="flex items-center gap-2 self-end md:self-auto">
-            <span className="text-xs font-semibold text-gray-500">View:</span>
+            <span className="text-xs font-semibold text-gray-500">{t('catalog.view')}</span>
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-1 transition-colors ${
@@ -125,7 +126,7 @@ export default function Catalog() {
               }`}
             >
               <Grid className="w-4 h-4" />
-              <span className="hidden sm:inline">Grid</span>
+              <span className="hidden sm:inline">{t('catalog.grid')}</span>
             </button>
             <button
               onClick={() => setViewMode('table')}
@@ -136,10 +137,9 @@ export default function Catalog() {
               }`}
             >
               <TableIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Table</span>
+              <span className="hidden sm:inline">{t('catalog.table')}</span>
             </button>
           </div>
-
         </div>
 
         {/* Category Scrollable Filter Pills */}
@@ -163,21 +163,21 @@ export default function Catalog() {
         </div>
       </div>
 
-      {/* Item Count Indicator */}
+      {/* Item Count */}
       <div className="flex justify-between items-center text-xs text-gray-500 font-semibold px-1">
-        <span>Showing {products.length} produce items</span>
-        <span>All prices in Rwandan Francs (RWF)</span>
+        <span>{t('catalog.showing')} {products.length} {t('catalog.produceItems')}</span>
+        <span>{t('catalog.allPricesRWF')}</span>
       </div>
 
       {/* Products Display */}
       {loading ? (
         <div className="py-20 text-center space-y-4">
           <div className="w-10 h-10 border-4 border-brand-700 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-500 text-sm font-medium">Loading V&F fresh produce list...</p>
+          <p className="text-gray-500 text-sm font-medium">{t('catalog.loading')}</p>
         </div>
       ) : products.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 space-y-4">
-          <p className="text-gray-500 text-base font-semibold">No produce items match your search filter "{searchQuery}".</p>
+          <p className="text-gray-500 text-base font-semibold">{t('catalog.noResults')} "{searchQuery}".</p>
           <button
             onClick={() => {
               setSearchQuery('');
@@ -185,7 +185,7 @@ export default function Catalog() {
             }}
             className="bg-brand-700 text-white font-bold text-xs px-4 py-2 rounded-xl"
           >
-            Reset Filters
+            {t('catalog.resetFilters')}
           </button>
         </div>
       ) : viewMode === 'grid' ? (
@@ -200,7 +200,6 @@ export default function Catalog() {
                 className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col justify-between card-hover relative group"
               >
                 <div>
-                  {/* Product Picture */}
                   <div className="relative h-44 w-full overflow-hidden rounded-xl bg-gray-100 mb-3 group">
                     <img
                       src={item.image || item.imageUrl}
@@ -231,7 +230,7 @@ export default function Catalog() {
                   )}
 
                   <div className="mt-3 pt-3 border-t border-gray-100 flex items-baseline justify-between">
-                    <span className="text-xs text-gray-500">Unit Price</span>
+                    <span className="text-xs text-gray-500">{t('catalog.unitPrice')}</span>
                     <p className="font-extrabold text-lg text-brand-900 font-heading">
                       {item.price.toLocaleString()} <span className="text-xs text-gray-600 font-normal">RWF / {item.unit}</span>
                     </p>
@@ -241,7 +240,7 @@ export default function Catalog() {
                 {/* Quantity & Add to Cart */}
                 <div className="mt-4 space-y-2.5">
                   <div className="flex items-center justify-between bg-gray-50 p-1.5 rounded-xl border border-gray-200">
-                    <span className="text-xs text-gray-500 font-medium px-2">Qty ({item.unit}):</span>
+                    <span className="text-xs text-gray-500 font-medium px-2">{t('catalog.qty')} ({item.unit}):</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleQuantityChange(item.id, -1)}
@@ -270,12 +269,12 @@ export default function Catalog() {
                     {inCart ? (
                       <>
                         <Check className="w-4 h-4" />
-                        <span>In Order ({inCart.quantity} {item.unit})</span>
+                        <span>{t('catalog.inOrder')} ({inCart.quantity} {item.unit})</span>
                       </>
                     ) : (
                       <>
                         <Plus className="w-4 h-4" />
-                        <span>Add to Cart</span>
+                        <span>{t('catalog.addToCart')}</span>
                       </>
                     )}
                   </button>
@@ -291,13 +290,13 @@ export default function Catalog() {
             <table className="w-full text-left text-sm">
               <thead className="bg-brand-900 text-white text-xs font-bold uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-4">No</th>
-                  <th className="py-3.5 px-4">Item</th>
-                  <th className="py-3.5 px-4">Kinyarwanda Name</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Unit</th>
-                  <th className="py-3.5 px-4 text-right">Price (RWF)</th>
-                  <th className="py-3.5 px-4 text-center">Action</th>
+                  <th className="py-3.5 px-4">{t('catalog.thNo')}</th>
+                  <th className="py-3.5 px-4">{t('catalog.thItem')}</th>
+                  <th className="py-3.5 px-4">{t('catalog.thKiny')}</th>
+                  <th className="py-3.5 px-4">{t('catalog.thCategory')}</th>
+                  <th className="py-3.5 px-4">{t('catalog.thUnit')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('catalog.thPrice')}</th>
+                  <th className="py-3.5 px-4 text-center">{t('catalog.thAction')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -340,7 +339,7 @@ export default function Catalog() {
                           }`}
                         >
                           {inCart ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                          <span>{inCart ? `Added (${inCart.quantity})` : 'Add'}</span>
+                          <span>{inCart ? `${t('catalog.added')} (${inCart.quantity})` : t('catalog.add')}</span>
                         </button>
                       </td>
                     </tr>

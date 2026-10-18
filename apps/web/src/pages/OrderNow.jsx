@@ -8,6 +8,7 @@ import {
   Building, User, Mail, Phone, MapPin, Calendar, FileText, 
   MessageSquare, ArrowLeft, Printer, ShieldCheck, Download, LogIn 
 } from 'lucide-react';
+import { useLang } from '../i18n/useLang';
 
 export default function OrderNow() {
   const [cart, setCart] = useAtom(cartAtom);
@@ -15,6 +16,7 @@ export default function OrderNow() {
   const [, setActiveTab] = useAtom(activeTabAtom);
   const [, setNotification] = useAtom(notificationAtom);
   const [session, setSession] = useAtom(customerSessionAtom);
+  const { t } = useLang();
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -169,13 +171,13 @@ export default function OrderNow() {
       <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white rounded-3xl p-8 shadow-lg">
         <div className="flex items-center gap-2 text-brand-gold font-bold text-xs uppercase tracking-wider mb-1">
           <ShoppingBag className="w-4 h-4" />
-          <span>B2B Quotation &amp; Cart</span>
+          <span>{t('cart.label')}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold font-heading">
-          Submit Produce Order Request
+          {t('cart.title')}
         </h1>
         <p className="text-brand-100 text-sm mt-1 max-w-2xl">
-          Build your wholesale order from our 56 farm-fresh items. Submit directly to V&F administration for formal quotation confirmation, invoicing, and scheduled daily Kigali delivery.
+          {t('cart.desc')}
         </p>
       </div>
 
@@ -191,10 +193,10 @@ export default function OrderNow() {
               Order Sent to Admin
             </span>
             <h2 className="text-3xl font-extrabold text-brand-900 font-heading">
-              Thank You! Your Order Has Been Received
+              {t('cart.thankYou')}
             </h2>
             <p className="text-gray-600 text-sm max-w-lg mx-auto">
-              Order <span className="font-mono font-bold text-brand-700">{submittedOrder.orderNumber}</span> has been logged into the V&F database. Our supply team will review and contact you shortly.
+              {t('cart.orderNumber')} <span className="font-mono font-bold text-brand-700">{submittedOrder.orderNumber}</span> {t('cart.orderLogged')}
             </p>
           </div>
 
@@ -212,7 +214,7 @@ export default function OrderNow() {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ordered Items ({submittedOrder.items.length})</p>
+              <p className="text-xs font-semibold text-gray-500">{t('cart.orderedItems')} ({submittedOrder.items.length})</p>
               <div className="divide-y divide-gray-200 bg-white rounded-xl border border-gray-200 overflow-hidden">
                 {submittedOrder.items.map((item, idx) => (
                   <div key={idx} className="p-3 flex justify-between items-center text-xs">
@@ -227,7 +229,7 @@ export default function OrderNow() {
             </div>
 
             <div className="pt-3 border-t border-gray-200 flex justify-between items-center text-base font-extrabold text-brand-900 font-heading">
-              <span>Total Quotation Amount:</span>
+              <span>{t('cart.totalQuote')}</span>
               <span className="text-2xl text-brand-700">{submittedOrder.totalAmount.toLocaleString()} RWF</span>
             </div>
           </div>
@@ -241,7 +243,7 @@ export default function OrderNow() {
               className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all text-sm"
             >
               <MessageSquare className="w-5 h-5" />
-              <span>Send Order via WhatsApp (+250 788 211 968)</span>
+              <span>{t('cart.sendWhatsApp')} (+250 788 211 968)</span>
             </a>
 
             <button
@@ -249,7 +251,7 @@ export default function OrderNow() {
               className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Quotation Receipt</span>
+              <span>{t('cart.printQuote')}</span>
             </button>
 
             <button
@@ -260,7 +262,7 @@ export default function OrderNow() {
               className="w-full sm:w-auto bg-brand-700 hover:bg-brand-800 text-white font-bold px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>New Order</span>
+              <span>{t('cart.newOrder')}</span>
             </button>
           </div>
         </div>
@@ -279,7 +281,7 @@ export default function OrderNow() {
                   <h2 className="font-extrabold text-xl text-gray-900 font-heading">Selected Produce Basket</h2>
                 </div>
                 <span className="bg-brand-100 text-brand-800 font-bold text-xs px-3 py-1 rounded-full">
-                  {cart.length} Products Selected
+                  {cart.length} {t('cart.productsSelected')}
                 </span>
               </div>
 
@@ -287,7 +289,7 @@ export default function OrderNow() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Quick add item by name (e.g. Tomatoes, Avocado, Garlic...)"
+                  placeholder={t('cart.quickAdd')}
                   value={quickSearch}
                   onChange={(e) => setQuickSearch(e.target.value)}
                   className="w-full pl-4 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 text-sm"
@@ -326,12 +328,12 @@ export default function OrderNow() {
               {cart.length === 0 ? (
                 <div className="py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300 space-y-3">
                   <ShoppingBag className="w-10 h-10 text-gray-400 mx-auto" />
-                  <p className="text-gray-500 text-sm font-medium">Your produce basket is currently empty.</p>
+                  <p className="text-gray-500 text-sm font-medium">{t('cart.emptyCart')}</p>
                   <button
                     onClick={() => setActiveTab('catalog')}
                     className="bg-brand-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-brand-800 transition-colors"
                   >
-                    Browse 56 Produce Items
+                    {t('cart.browse56')}
                   </button>
                 </div>
               ) : (
@@ -401,7 +403,7 @@ export default function OrderNow() {
               {/* Basket Total Summary */}
               {cart.length > 0 && (
                 <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                  <span className="font-bold text-gray-700 text-sm">Estimated Total Amount:</span>
+                  <span className="font-bold text-gray-700 text-sm">{t('cart.estimatedTotal')}</span>
                   <span className="font-extrabold text-2xl text-brand-900 font-heading">
                     {cartTotal.toLocaleString()} <span className="text-sm font-normal text-gray-600">RWF</span>
                   </span>
@@ -413,12 +415,12 @@ export default function OrderNow() {
             <div className="bg-brand-50 rounded-2xl p-5 border border-brand-200 text-xs text-brand-900 space-y-2">
               <div className="flex items-center gap-2 font-bold">
                 <ShieldCheck className="w-4 h-4 text-brand-700" />
-                <span>V&F Official Wholesale Terms</span>
+                <span>{t('cart.termsTitle')}</span>
               </div>
               <p className="text-gray-600 leading-relaxed">
-                • Orders are processed immediately by V&F Rwanda logistics.<br />
-                • Prices are guaranteed valid until 28 September 2026.<br />
-                • Official Tax Invoices (TIN: 156708252) provided upon delivery.
+                • {t('cart.terms1')}<br />
+                • {t('cart.terms2')}<br />
+                • {t('cart.terms3')}
               </p>
             </div>
 

@@ -32,5 +32,8 @@ export const cartItemCountAtom = atom((get) => {
 // Toast / Notification atom
 export const notificationAtom = atom(null);
 
+// Language: 'en' | 'rw'  (persisted across sessions)
+export const langAtom = atomWithStorage('vf_lang', 'en');
+
 // Admin orders state atom
 export const ordersListAtom = atom([]);

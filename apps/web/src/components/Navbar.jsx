@@ -1,32 +1,34 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 import { activeTabAtom, cartItemCountAtom, customerSessionAtom } from '../store/atoms';
-import { ShoppingBag, Phone, MapPin, Download, ShieldCheck, Menu, X, FileText, User, LogIn } from 'lucide-react';
+import { ShoppingBag, Phone, MapPin, Download, ShieldCheck, Menu, X, User, LogIn } from 'lucide-react';
 import { COMPANY_DETAILS } from '../data/productsData';
+import { useLang } from '../i18n/useLang';
 
 export default function Navbar() {
   const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   const [cartCount] = useAtom(cartItemCountAtom);
   const [session] = useAtom(customerSessionAtom);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { t, lang, toggle } = useLang();
   const firstName = session?.user?.name?.split(' ')[0];
 
   const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'catalog', label: 'Price List & Catalog (56)' },
-    { id: 'order', label: 'Cart', badge: cartCount },
-    { id: 'contact', label: 'Contact & Map' },
+    { id: 'home',    label: t('nav.home') },
+    { id: 'catalog', label: t('nav.catalog') },
+    { id: 'order',   label: t('nav.cart'), badge: cartCount },
+    { id: 'contact', label: t('nav.contact') },
   ];
 
   return (
     <header className="sticky top-0 z-50 glass-nav shadow-sm">
       {/* Top Banner Bar */}
       <div className="bg-brand-900 text-brand-100 text-xs py-1.5 px-4">
-        <div className="max-w-7xl mx-mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-brand-gold" />
-              Verified B2B Fresh Produce Supplier | TIN: {COMPANY_DETAILS.tin}
+              {t('nav.verified')} | TIN: {COMPANY_DETAILS.tin}
             </span>
             <span className="hidden sm:inline text-brand-300">|</span>
             <span className="hidden sm:flex items-center gap-1">
@@ -49,7 +51,7 @@ export default function Navbar() {
               className="bg-brand-700 hover:bg-brand-600 text-white px-2.5 py-0.5 rounded text-[11px] font-medium flex items-center gap-1 transition-colors"
             >
               <Download className="w-3 h-3" />
-              Official PDF 2026
+              {t('nav.officialPdf')}
             </a>
           </div>
         </div>
@@ -74,11 +76,11 @@ export default function Navbar() {
                   V<span className="text-brand-600">&</span>F
                 </span>
                 <span className="bg-brand-100 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-brand-200">
-                  B2B Wholesale
+                  {t('nav.b2b')}
                 </span>
               </div>
               <p className="text-xs font-semibold text-gray-600 tracking-wide">
-                Vegetables & Fruits Rwanda
+                {t('nav.tagline')}
               </p>
             </div>
           </div>
@@ -108,8 +110,20 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Action Buttons: Account + Cart */}
+          {/* Action Buttons: Language Toggle + Account + Cart */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* Language Toggle Button */}
+            <button
+              id="lang-toggle"
+              onClick={toggle}
+              title={lang === 'en' ? 'Switch to Kinyarwanda' : 'Hindura Icyongereza'}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 text-xs font-black text-gray-700 hover:bg-brand-50 hover:border-brand-300 transition-all select-none"
+            >
+              <span className={`transition-all ${lang === 'en' ? 'text-brand-700' : 'text-gray-400'}`}>EN</span>
+              <span className="text-gray-300">|</span>
+              <span className={`transition-all ${lang === 'rw' ? 'text-brand-700' : 'text-gray-400'}`}>RW</span>
+            </button>
+
             <button
               id="nav-account"
               onClick={() => setActiveTab('account')}
@@ -120,7 +134,7 @@ export default function Navbar() {
               }`}
             >
               {session ? <User className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-              <span>{session ? firstName : 'Login'}</span>
+              <span>{session ? firstName : t('nav.login')}</span>
             </button>
             <button
               id="nav-cart"
@@ -128,7 +142,7 @@ export default function Navbar() {
               className="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 flex items-center gap-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>Cart</span>
+              <span>{t('nav.cart')}</span>
               {cartCount > 0 && (
                 <span className="bg-white text-brand-800 text-xs font-black px-2 py-0.5 rounded-full">
                   {cartCount}
@@ -139,6 +153,14 @@ export default function Navbar() {
 
           {/* Mobile menu trigger */}
           <div className="lg:hidden flex items-center gap-2">
+            {/* Mobile language toggle */}
+            <button
+              id="lang-toggle-mobile"
+              onClick={toggle}
+              className="px-2 py-1.5 rounded-lg border border-gray-200 text-[11px] font-black text-gray-600 hover:bg-brand-50"
+            >
+              {lang === 'en' ? 'RW' : 'EN'}
+            </button>
             <button
               onClick={() => setActiveTab('order')}
               className="p-2 bg-brand-100 text-brand-800 rounded-xl relative"
@@ -181,7 +203,7 @@ export default function Navbar() {
                 <span>{item.label}</span>
                 {item.badge > 0 && (
                   <span className="bg-brand-gold text-brand-900 font-bold text-xs px-2 py-0.5 rounded-full">
-                    {item.badge} items
+                    {item.badge} {lang === 'en' ? 'items' : 'ibicuruzwa'}
                   </span>
                 )}
               </button>
@@ -197,7 +219,7 @@ export default function Navbar() {
             }`}
           >
             {session ? <User className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-            <span>{session ? `My Account (${firstName})` : 'Login / Register'}</span>
+            <span>{session ? `${lang === 'en' ? 'My Account' : 'Konti Yanjye'} (${firstName})` : t('account.loginTab') + ' / ' + t('account.registerTab')}</span>
           </button>
         </div>
       )}

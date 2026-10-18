@@ -3,6 +3,7 @@ import { useAtom } from 'jotai';
 import { customerSessionAtom, activeTabAtom, notificationAtom, cartItemCountAtom } from '../store/atoms';
 import { authApi, ordersApi, apiErrorMessage } from '../services/apiClient';
 import { User, Mail, Lock, Phone, Building, LogIn, UserPlus, LogOut, ShoppingBag, Package, Eye, EyeOff } from 'lucide-react';
+import { useLang } from '../i18n/useLang';
 
 const STATUS_STYLES = {
   PENDING: 'bg-amber-100 text-amber-800 border-amber-300',
@@ -37,6 +38,7 @@ function Field({ icon: Icon, label, id, type = 'text', value, onChange, required
 }
 
 export default function Account() {
+  const { t } = useLang();
   const [session, setSession] = useAtom(customerSessionAtom);
   const [, setActiveTab] = useAtom(activeTabAtom);
   const [, setNotification] = useAtom(notificationAtom);
@@ -80,7 +82,7 @@ export default function Account() {
           ? await authApi.login(form.email, form.password)
           : await authApi.register(form);
       setSession(result);
-      notify(mode === 'login' ? `Welcome back, ${result.user.name}!` : 'Account created successfully!');
+      notify(mode === 'login' ? `${t('account.loginTab')}! ${result.user.name}` : t('account.loginBtn'));
       // If they were building a cart, take them straight back to it
       if (cartCount > 0) setActiveTab('order');
     } catch (err) {
@@ -93,7 +95,7 @@ export default function Account() {
   const handleLogout = () => {
     setSession(null);
     setOrders([]);
-    notify('You have been logged out');
+    notify(t('account.logout'));
   };
 
   /* ---------------- Logged-in view ---------------- */
@@ -107,7 +109,7 @@ export default function Account() {
               {u.name?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-brand-gold text-xs font-bold uppercase tracking-wider">My Account</p>
+              <p className="text-brand-gold text-xs font-bold uppercase tracking-wider">{t('account.myAccount')}</p>
               <h1 className="text-3xl font-extrabold font-heading">{u.name}</h1>
               <p className="text-brand-100 text-sm">
                 {u.email}
@@ -122,14 +124,14 @@ export default function Account() {
               onClick={() => setActiveTab('order')}
               className="bg-brand-gold hover:bg-yellow-400 text-brand-900 font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all hover:scale-[1.02]"
             >
-              <ShoppingBag className="w-4 h-4" /> Go to Cart
+              <ShoppingBag className="w-4 h-4" /> {t('account.goToCart')}
             </button>
             <button
               id="account-logout"
               onClick={handleLogout}
               className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-all"
             >
-              <LogOut className="w-4 h-4" /> Log out
+              <LogOut className="w-4 h-4" /> {t('account.logout')}
             </button>
           </div>
         </div>
@@ -137,18 +139,18 @@ export default function Account() {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
             <Package className="w-5 h-5 text-brand-700" />
-            <h2 className="font-extrabold text-lg text-gray-900 font-heading">My Orders</h2>
+            <h2 className="font-extrabold text-lg text-gray-900 font-heading">{t('account.myOrders')}</h2>
           </div>
           {ordersLoading ? (
-            <p className="p-10 text-center text-sm text-gray-500">Loading your orders…</p>
+            <p className="p-10 text-center text-sm text-gray-500">{t('account.loadingOrders')}</p>
           ) : orders.length === 0 ? (
             <div className="p-10 text-center space-y-3">
-              <p className="text-gray-500 text-sm">You haven't placed any orders yet.</p>
+              <p className="text-gray-500 text-sm">{t('account.noOrders')}</p>
               <button
                 onClick={() => setActiveTab('catalog')}
                 className="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm"
               >
-                Browse the catalog
+                {t('account.browseCatalog')}
               </button>
             </div>
           ) : (
@@ -183,12 +185,10 @@ export default function Account() {
       <div className="bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden animate-fadeIn">
         <div className="bg-gradient-to-br from-brand-900 to-brand-700 text-white p-7 text-center">
           <h1 className="text-2xl font-extrabold font-heading">
-            {mode === 'login' ? 'Welcome back' : 'Create your account'}
+            {mode === 'login' ? t('account.welcomeBack') : t('account.createAccount')}
           </h1>
           <p className="text-brand-100 text-sm mt-1">
-            {mode === 'login'
-              ? 'Log in to place orders and track deliveries.'
-              : 'Register so we know who is ordering and can deliver to you.'}
+            {mode === 'login' ? t('account.loginDesc') : t('account.registerDesc')}
           </p>
         </div>
 
@@ -203,7 +203,7 @@ export default function Account() {
                 mode === m ? 'bg-white text-brand-800 shadow' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {m === 'login' ? 'Log in' : 'Register'}
+              {m === 'login' ? t('account.loginTab') : t('account.registerTab')}
             </button>
           ))}
         </div>
@@ -211,22 +211,22 @@ export default function Account() {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {mode === 'register' && (
             <>
-              <Field icon={User} id="reg-name" label="Full name" value={form.name} onChange={set('name')} required autoComplete="name" placeholder="e.g. Jean Mugisha" />
-              <Field icon={Building} id="reg-company" label="Company / Hotel / Restaurant" value={form.companyName} onChange={set('companyName')} placeholder="Optional" autoComplete="organization" />
-              <Field icon={Phone} id="reg-phone" label="Phone / WhatsApp" type="tel" value={form.phone} onChange={set('phone')} required autoComplete="tel" placeholder="+250 7xx xxx xxx" />
+              <Field icon={User} id="reg-name" label={t('account.fullName')} value={form.name} onChange={set('name')} required autoComplete="name" placeholder="e.g. Jean Mugisha" />
+              <Field icon={Building} id="reg-company" label={t('account.company')} value={form.companyName} onChange={set('companyName')} placeholder={t('account.optional')} autoComplete="organization" />
+              <Field icon={Phone} id="reg-phone" label={t('account.phoneWa')} type="tel" value={form.phone} onChange={set('phone')} required autoComplete="tel" placeholder="+250 7xx xxx xxx" />
             </>
           )}
-          <Field icon={Mail} id="auth-email" label="Email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="you@example.com" />
+          <Field icon={Mail} id="auth-email" label={t('account.emailAddr')} type="email" value={form.email} onChange={set('email')} required autoComplete="email" placeholder="you@example.com" />
           <Field
             icon={Lock}
             id="auth-password"
-            label="Password"
+            label={t('account.password')}
             type={showPassword ? 'text' : 'password'}
             value={form.password}
             onChange={set('password')}
             required
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            placeholder={mode === 'register' ? 'At least 6 characters' : '••••••••'}
+            placeholder={mode === 'register' ? t('account.passwordMin') : '••••••••'}
             trailing={
               <button
                 type="button"
@@ -250,7 +250,7 @@ export default function Account() {
             className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
           >
             {mode === 'login' ? <LogIn className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-            {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}
+            {loading ? t('account.waiting') : mode === 'login' ? t('account.loginBtn') : t('account.createBtn')}
           </button>
         </form>
       </div>
