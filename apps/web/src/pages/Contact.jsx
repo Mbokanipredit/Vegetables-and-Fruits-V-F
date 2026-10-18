@@ -5,7 +5,7 @@ import { useAtom } from 'jotai';
 import { notificationAtom } from '../store/atoms';
 import { 
   Phone, Mail, MapPin, ShieldCheck, Download, Send, 
-  MessageSquare, Clock, Building, CheckCircle 
+  MessageSquare, CheckCircle, Navigation 
 } from 'lucide-react';
 
 export default function Contact() {
@@ -26,29 +26,29 @@ export default function Contact() {
 
   // Initialize Leaflet Map for Nyarugenge, Kigali, Rwanda
   useEffect(() => {
+    const kigaliLat = -1.9441;
+    const kigaliLng = 30.0619;
+
     if (window.L && mapRef.current && !leafletInstance.current) {
       try {
-        const kigaliLat = -1.9441;
-        const kigaliLng = 30.0619;
-
         const map = window.L.map(mapRef.current).setView([kigaliLat, kigaliLng], 14);
 
         window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          attribution: '&copy; OpenStreetMap contributors',
           maxZoom: 19,
         }).addTo(map);
 
-        // Add custom marker for V&F headquarters
         const marker = window.L.marker([kigaliLat, kigaliLng]).addTo(map);
         marker.bindPopup(`
           <div style="font-family: sans-serif; padding: 4px;">
             <strong style="color: #1b5e20; font-size: 14px;">Vegetables and Fruits_V&F</strong><br/>
-            <span style="font-size: 12px; color: #4b5563;">Rwanda, Kigali, Nyarugenge</span><br/>
+            <span style="font-size: 12px; color: #4b5563;">Nyarugenge, Kigali, Rwanda</span><br/>
             <span style="font-size: 11px; color: #059669; font-weight: bold;">TIN: ${COMPANY_DETAILS.tin}</span>
           </div>
         `).openPopup();
 
         leafletInstance.current = map;
+        setTimeout(() => map.invalidateSize(), 300);
       } catch (err) {
         console.warn('Leaflet initialization fallback:', err);
       }
@@ -119,7 +119,7 @@ export default function Contact() {
 
             <div className="space-y-4 text-sm text-gray-700">
               
-              {/* Phone / WhatsApp 1 */}
+              {/* Phone / WhatsApp */}
               <div className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                 <div className="w-10 h-10 bg-brand-100 text-brand-800 rounded-xl flex items-center justify-center shrink-0">
                   <Phone className="w-5 h-5" />
@@ -228,18 +228,34 @@ export default function Contact() {
                 <MapPin className="w-5 h-5 text-brand-700" />
                 V&F Kigali Distribution Location Map
               </h3>
-              <span className="text-xs font-semibold text-brand-700 bg-brand-100 px-2.5 py-1 rounded-full">
-                Nyarugenge, Kigali
-              </span>
+              <a
+                href="https://maps.google.com/?q=Nyarugenge,+Kigali,+Rwanda"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-brand-700 bg-brand-100 hover:bg-brand-200 px-3 py-1 rounded-full flex items-center gap-1 transition-colors"
+              >
+                <Navigation className="w-3 h-3" />
+                <span>Open in Google Maps</span>
+              </a>
             </div>
 
-            {/* Map Container */}
+            {/* Map Frame Container */}
             <div className="h-96 w-full rounded-xl overflow-hidden shadow-inner border border-gray-200 bg-gray-100 relative">
-              <div ref={mapRef} className="w-full h-full"></div>
+              <iframe
+                title="V&F Kigali Nyarugenge Location Map"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                scrolling="no"
+                marginHeight="0"
+                marginWidth="0"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=30.0400%2C-1.9600%2C30.0850%2C-1.9300&amp;layer=mapnik&amp;marker=-1.9441%2C30.0619"
+                className="w-full h-full rounded-xl"
+              ></iframe>
             </div>
 
             <p className="text-xs text-gray-500 italic px-2">
-              📍 Interactive Map centered on Nyarugenge, Kigali, Rwanda. Serving all major sectors across Kigali city.
+              📍 Interactive Map centered on Nyarugenge, Kigali, Rwanda. Delivering fresh produce daily to all sectors of Kigali.
             </p>
           </div>
 
@@ -278,7 +294,7 @@ export default function Contact() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Jean-Luc"
+                      placeholder="e.g. Francis Hodari"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 text-sm"
@@ -292,7 +308,7 @@ export default function Contact() {
                     <input
                       type="email"
                       required
-                      placeholder="name@company.rw"
+                      placeholder="hodarifrancis1@gmail.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 text-sm"
@@ -307,7 +323,7 @@ export default function Contact() {
                     </label>
                     <input
                       type="tel"
-                      placeholder="+250 788 000 000"
+                      placeholder="+250 788 211 968"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 text-sm"

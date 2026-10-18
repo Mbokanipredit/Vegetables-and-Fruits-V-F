@@ -8,6 +8,7 @@ import Catalog from './pages/Catalog';
 import OrderNow from './pages/OrderNow';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
+import Account from './pages/Account';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
           {activeTab === 'catalog' && <Catalog />}
           {activeTab === 'order' && <OrderNow />}
           {activeTab === 'contact' && <Contact />}
+          {activeTab === 'account' && <Account />}
           {activeTab === 'admin' && <Admin />}
         </main>
       </div>

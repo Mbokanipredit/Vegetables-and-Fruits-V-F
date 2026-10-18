@@ -1,27 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { ordersApi } from '../services/apiClient';
+import { ordersApi, authApi, apiErrorMessage } from '../services/apiClient';
 import { useAtom } from 'jotai';
-import { notificationAtom } from '../store/atoms';
+import { notificationAtom, adminSessionAtom } from '../store/atoms';
 import { 
   ShieldCheck, ShoppingBag, Clock, CheckCircle2, XCircle, 
-  Search, RefreshCw, FileText, Phone, Mail, MapPin, Eye 
+  Search, RefreshCw, FileText, Phone, Mail, MapPin, Eye, Lock, LogOut, UserCircle 
 } from 'lucide-react';
 
+function AdminLogin({ onLoggedIn }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      onLoggedIn(await authApi.adminLogin(email, password));
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-sm mx-auto px-4 py-16">
+      <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-gray-200 shadow-xl p-7 space-y-4 animate-fadeIn">
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-brand-900 text-brand-gold flex items-center justify-center shadow-md">
+            <Lock className="w-6 h-6" />
+          </div>
+          <h1 className="text-xl font-extrabold text-gray-900 font-heading">Admin sign in</h1>
+          <p className="text-xs text-gray-500">Restricted to V&amp;F staff.</p>
+        </div>
+        <input
+          id="admin-email"
+          type="email"
+          required
+          autoComplete="username"
+          placeholder="Admin email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+        <input
+          id="admin-password"
+          type="password"
+          required
+          autoComplete="current-password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+        {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>}
+        <button
+          id="admin-login-submit"
+          type="submit"
+          disabled={loading}
+          className="w-full bg-brand-900 hover:bg-brand-800 disabled:opacity-60 text-white font-bold py-2.5 rounded-xl transition-colors"
+        >
+          {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function Admin() {
+  const [adminSession, setAdminSession] = useAtom(adminSessionAtom);
+  if (!adminSession?.token) return <AdminLogin onLoggedIn={setAdminSession} />;
+  return <AdminDashboard session={adminSession} onLogout={() => setAdminSession(null)} />;
+}
+
+function AdminDashboard({ session, onLogout }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [customerCount, setCustomerCount] = useState(0);
   const [, setNotification] = useAtom(notificationAtom);
+
+  const handleAuthError = (err) => {
+    if (err?.response?.status === 401 || err?.response?.status === 403) onLogout();
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const data = await ordersApi.getOrders();
+      const [data, customers] = await Promise.all([
+        ordersApi.getOrders(session.token),
+        authApi.getCustomers(session.token),
+      ]);
       setOrders(data);
+      setCustomerCount(customers.length);
     } catch (err) {
       console.error(err);
+      handleAuthError(err);
     } finally {
       setLoading(false);
     }
@@ -33,17 +112,15 @@ export default function Admin() {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await ordersApi.apiClient?.patch(`/api/orders/${orderId}/status`, { status: newStatus });
+      await ordersApi.updateStatus(orderId, newStatus, session.token);
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
       setNotification(`Updated order status to ${newStatus}`);
       setTimeout(() => setNotification(null), 3000);
     } catch (err) {
-      console.warn('Status update API error, updating state:', err);
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-      );
+      handleAuthError(err);
+      alert(apiErrorMessage(err, 'Could not update the order status.'));
     }
   };
 
@@ -55,6 +132,8 @@ export default function Admin() {
       o.orderNumber?.toLowerCase().includes(q) ||
       o.companyName?.toLowerCase().includes(q) ||
       o.contactPerson?.toLowerCase().includes(q) ||
+      o.user?.name?.toLowerCase().includes(q) ||
+      o.user?.email?.toLowerCase().includes(q) ||
       o.phone?.includes(q);
     return matchesStatus && matchesSearch;
   });
@@ -81,13 +160,26 @@ export default function Admin() {
           </p>
         </div>
 
-        <button
-          onClick={fetchOrders}
-          className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl border border-white/20 text-sm flex items-center gap-2 transition-all"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh Inbound Orders</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs text-brand-100 flex items-center gap-1.5">
+            <UserCircle className="w-4 h-4 text-brand-gold" /> {session.user?.email}
+          </span>
+          <button
+            onClick={fetchOrders}
+            className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-2.5 rounded-xl border border-white/20 text-sm flex items-center gap-2 transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          <button
+            id="admin-logout"
+            onClick={onLogout}
+            className="bg-white/10 hover:bg-red-500/80 text-white font-bold px-4 py-2.5 rounded-xl border border-white/20 text-sm flex items-center gap-2 transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Log out</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats Cards */}
@@ -95,7 +187,7 @@ export default function Admin() {
         <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-1">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Received Orders</p>
           <p className="text-3xl font-extrabold text-gray-900 font-heading">{orders.length}</p>
-          <p className="text-xs text-gray-400">All recorded quotation submissions</p>
+          <p className="text-xs text-gray-400">From {customerCount} registered customer account(s)</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-amber-200 bg-amber-50/30 p-5 shadow-sm space-y-1">
@@ -194,6 +286,13 @@ export default function Admin() {
                     <td className="py-3.5 px-4 text-xs">
                       <p className="font-semibold text-gray-900">{ord.contactPerson}</p>
                       <p className="text-gray-500">{ord.phone}</p>
+                      {ord.user ? (
+                        <p className="text-[10px] text-brand-700 font-bold mt-0.5 flex items-center gap-1">
+                          <UserCircle className="w-3 h-3" /> {ord.user.email}
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-gray-400 mt-0.5">Guest (no account)</p>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 text-xs font-medium text-gray-600">
                       {ord.deliveryDate || 'ASAP'}
@@ -271,6 +370,18 @@ export default function Admin() {
               <div>
                 <p className="text-gray-500 font-semibold">Delivery Location:</p>
                 <p className="font-bold text-gray-900">{selectedOrder.address}</p>
+              </div>
+              <div className="col-span-2 border-t border-gray-200 pt-3">
+                <p className="text-gray-500 font-semibold">Ordered by account:</p>
+                {selectedOrder.user ? (
+                  <p className="font-bold text-brand-800">
+                    {selectedOrder.user.name} · {selectedOrder.user.email}
+                    {selectedOrder.user.phone ? ` · ${selectedOrder.user.phone}` : ''}
+                    {selectedOrder.user.companyName ? ` · ${selectedOrder.user.companyName}` : ''}
+                  </p>
+                ) : (
+                  <p className="font-bold text-gray-400">Guest order (placed before accounts were required)</p>
+                )}
               </div>
             </div>
 

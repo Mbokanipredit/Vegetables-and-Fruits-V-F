@@ -26,7 +26,7 @@ export default function Home() {
       return [...prevCart, { product, quantity: 1 }];
     });
 
-    setNotification(`Added ${product.name} to your Order Builder!`);
+    setNotification(`Added ${product.name} to your Cart!`);
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -43,11 +43,6 @@ export default function Home() {
             
             {/* Left Content */}
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 text-brand-gold font-bold text-xs uppercase tracking-wider">
-                <Sparkles className="w-4 h-4" />
-                <span>Rwanda's Trusted B2B Produce Wholesale Partner</span>
-              </div>
-
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-heading leading-tight">
                 Farm-Fresh Produce <br />
                 <span className="text-brand-gold">Directly to Your Business</span>
@@ -144,10 +139,7 @@ export default function Home() {
       {/* Target Industries We Serve */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="text-brand-700 font-bold text-xs uppercase tracking-widest bg-brand-100 px-3 py-1 rounded-full border border-brand-200">
-            Tailored B2B Supply Solutions
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-900 font-heading mt-3">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-900 font-heading">
             Who We Supply Across Rwanda
           </h2>
           <p className="text-gray-600 mt-2 text-base">
@@ -290,10 +282,7 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
           <div>
-            <span className="text-brand-700 font-bold text-xs uppercase tracking-wider bg-brand-100 px-3 py-1 rounded-full">
-              Popular B2B Items
-            </span>
-            <h2 className="text-3xl font-extrabold text-brand-900 font-heading mt-2">
+            <h2 className="text-3xl font-extrabold text-brand-900 font-heading">
               Featured Fresh Produce
             </h2>
           </div>
@@ -310,24 +299,42 @@ export default function Home() {
           {featuredItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col justify-between card-hover"
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col justify-between card-hover group"
             >
               <div>
-                <div className="flex justify-between items-start mb-3">
-                  <span className="bg-brand-50 text-brand-800 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-brand-200">
-                    {item.category}
-                  </span>
-                  <span className="text-xs text-gray-400 font-semibold">#{item.id}</span>
+                {/* Product Image */}
+                <div className="relative h-44 w-full overflow-hidden rounded-xl bg-gray-100 mb-3.5">
+                  <img
+                    src={item.image || item.imageUrl}
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80';
+                    }}
+                  />
+                  <div className="absolute top-2 left-2">
+                    <span className="bg-white/95 backdrop-blur-md text-brand-900 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm border border-gray-100">
+                      {item.category}
+                    </span>
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <span className="bg-black/60 backdrop-blur-md text-white text-[11px] font-mono font-bold px-2 py-0.5 rounded-md">
+                      #{item.id}
+                    </span>
+                  </div>
                 </div>
 
-                <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
+                <h3 className="font-bold text-base text-gray-900 group-hover:text-brand-800 transition-colors leading-snug">
+                  {item.name}
+                </h3>
                 {item.kinyarwanda && (
                   <p className="text-xs text-brand-700 font-semibold italic mt-0.5">
                     "{item.kinyarwanda}"
                   </p>
                 )}
 
-                <div className="mt-4 pt-4 border-t border-gray-100 flex items-baseline justify-between">
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-baseline justify-between">
                   <div>
                     <span className="text-xs text-gray-500">Unit Price</span>
                     <p className="font-extrabold text-xl text-brand-900 font-heading">
@@ -339,10 +346,10 @@ export default function Home() {
 
               <button
                 onClick={() => handleAddToCart(item)}
-                className="mt-5 w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm shadow-sm"
+                className="mt-4 w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm shadow-sm"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add to Order Builder</span>
+                <span>Add to Cart</span>
               </button>
             </div>
           ))}

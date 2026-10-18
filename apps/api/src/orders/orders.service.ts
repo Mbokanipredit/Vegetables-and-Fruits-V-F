@@ -6,12 +6,13 @@ import { CreateOrderDto } from './dto/create-order.dto';
 export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createOrderDto: CreateOrderDto) {
+  async create(createOrderDto: CreateOrderDto, userId?: string) {
     const orderNumber = `VF-ORD-${Date.now().toString().slice(-6)}`;
 
     return this.prisma.order.create({
       data: {
         orderNumber,
+        userId: userId || null,
         companyName: createOrderDto.companyName,
         clientType: (createOrderDto.clientType as any) || 'HOTEL',
         contactPerson: createOrderDto.contactPerson,
@@ -41,6 +42,14 @@ export class OrdersService {
 
   async findAll() {
     return this.prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { items: true, user: { select: { id: true, name: true, email: true, phone: true, companyName: true } } },
+    });
+  }
+
+  async findByUser(userId: string) {
+    return this.prisma.order.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       include: { items: true },
     });

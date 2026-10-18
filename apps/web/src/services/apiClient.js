@@ -38,13 +38,46 @@ export const productsApi = {
   },
 };
 
+const authHeader = (token) => (token ? { headers: { Authorization: `Bearer ${token}` } } : {});
+
+// Extract a readable error message from an API error
+export const apiErrorMessage = (error, fallback = 'Something went wrong. Please try again.') => {
+  const msg = error?.response?.data?.message;
+  if (Array.isArray(msg)) return msg.join(', ');
+  if (msg) return msg;
+  if (!error?.response) return 'Cannot reach the server. Please check that the API is running.';
+  return fallback;
+};
+
+// Auth API service
+export const authApi = {
+  async register(payload) {
+    const { data } = await apiClient.post('/api/auth/register', payload);
+    return data; // { token, user }
+  },
+  async login(email, password) {
+    const { data } = await apiClient.post('/api/auth/login', { email, password });
+    return data;
+  },
+  async adminLogin(email, password) {
+    const { data } = await apiClient.post('/api/auth/admin/login', { email, password });
+    return data;
+  },
+  async getCustomers(adminToken) {
+    const { data } = await apiClient.get('/api/auth/customers', authHeader(adminToken));
+    return data;
+  },
+};
+
 // Orders API service using Axios
 export const ordersApi = {
-  async createOrder(orderPayload) {
+  async createOrder(orderPayload, token) {
     try {
-      const response = await apiClient.post('/api/orders', orderPayload);
+      const response = await apiClient.post('/api/orders', orderPayload, authHeader(token));
       return response.data;
     } catch (error) {
+      // Only fall back to local storage when the server is unreachable
+      if (error.response) throw error;
       console.warn('Backend API offline, saving order locally:', error.message);
       // Fallback local order object generator
       const mockOrder = {
@@ -64,14 +97,19 @@ export const ordersApi = {
     }
   },
 
-  async getOrders() {
-    try {
-      const response = await apiClient.get('/api/orders');
-      return response.data;
-    } catch (error) {
-      console.warn('Backend API offline, retrieving orders from local storage');
-      return JSON.parse(localStorage.getItem('vf_orders') || '[]');
-    }
+  async getMyOrders(token) {
+    const { data } = await apiClient.get('/api/orders/mine', authHeader(token));
+    return data;
+  },
+
+  async getOrders(adminToken) {
+    const response = await apiClient.get('/api/orders', authHeader(adminToken));
+    return response.data;
+  },
+
+  async updateStatus(orderId, status, adminToken) {
+    const { data } = await apiClient.patch(`/api/orders/${orderId}/status`, { status }, authHeader(adminToken));
+    return data;
   },
 };
 

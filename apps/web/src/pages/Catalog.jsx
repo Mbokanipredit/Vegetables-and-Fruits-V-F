@@ -47,7 +47,7 @@ export default function Catalog() {
       return [...prevCart, { product, quantity: qty }];
     });
 
-    setNotification(`Added ${qty} ${product.unit} of ${product.name} to order builder!`);
+    setNotification(`Added ${qty} ${product.unit} of ${product.name} to your cart!`);
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -197,24 +197,40 @@ export default function Catalog() {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between card-hover relative group"
+                className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col justify-between card-hover relative group"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="bg-brand-50 text-brand-800 text-[10px] font-bold px-2 py-0.5 rounded border border-brand-200">
-                      {item.category}
-                    </span>
-                    <span className="text-xs text-gray-400 font-mono font-bold">#{item.id}</span>
+                  {/* Product Picture */}
+                  <div className="relative h-44 w-full overflow-hidden rounded-xl bg-gray-100 mb-3 group">
+                    <img
+                      src={item.image || item.imageUrl}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80';
+                      }}
+                    />
+                    <div className="absolute top-2 left-2">
+                      <span className="bg-white/95 backdrop-blur-md text-brand-900 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+                        {item.category}
+                      </span>
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">
+                        #{item.id}
+                      </span>
+                    </div>
                   </div>
 
-                  <h3 className="font-bold text-base text-gray-900 leading-snug">{item.name}</h3>
+                  <h3 className="font-bold text-base text-gray-900 group-hover:text-brand-800 transition-colors leading-snug">{item.name}</h3>
                   {item.kinyarwanda && (
                     <p className="text-xs text-brand-700 font-semibold italic mt-0.5">
                       "{item.kinyarwanda}"
                     </p>
                   )}
 
-                  <div className="mt-4 pt-3 border-t border-gray-100 flex items-baseline justify-between">
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex items-baseline justify-between">
                     <span className="text-xs text-gray-500">Unit Price</span>
                     <p className="font-extrabold text-lg text-brand-900 font-heading">
                       {item.price.toLocaleString()} <span className="text-xs text-gray-600 font-normal">RWF / {item.unit}</span>
@@ -223,7 +239,7 @@ export default function Catalog() {
                 </div>
 
                 {/* Quantity & Add to Cart */}
-                <div className="mt-5 space-y-3">
+                <div className="mt-4 space-y-2.5">
                   <div className="flex items-center justify-between bg-gray-50 p-1.5 rounded-xl border border-gray-200">
                     <span className="text-xs text-gray-500 font-medium px-2">Qty ({item.unit}):</span>
                     <div className="flex items-center gap-2">
@@ -259,7 +275,7 @@ export default function Catalog() {
                     ) : (
                       <>
                         <Plus className="w-4 h-4" />
-                        <span>Add to Order Builder</span>
+                        <span>Add to Cart</span>
                       </>
                     )}
                   </button>
@@ -276,7 +292,7 @@ export default function Catalog() {
               <thead className="bg-brand-900 text-white text-xs font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">No</th>
-                  <th className="py-3.5 px-4">Item Description</th>
+                  <th className="py-3.5 px-4">Item</th>
                   <th className="py-3.5 px-4">Kinyarwanda Name</th>
                   <th className="py-3.5 px-4">Category</th>
                   <th className="py-3.5 px-4">Unit</th>
@@ -290,7 +306,20 @@ export default function Catalog() {
                   return (
                     <tr key={item.id} className="hover:bg-brand-50/50 transition-colors">
                       <td className="py-3 px-4 font-mono text-gray-500 font-bold">{item.id}</td>
-                      <td className="py-3 px-4 font-semibold text-gray-900">{item.name}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={item.image || item.imageUrl}
+                            alt={item.name}
+                            className="w-10 h-10 rounded-lg object-cover bg-gray-100 shrink-0 border border-gray-200"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80';
+                            }}
+                          />
+                          <span className="font-semibold text-gray-900">{item.name}</span>
+                        </div>
+                      </td>
                       <td className="py-3 px-4 text-brand-700 font-medium italic">{item.kinyarwanda || '—'}</td>
                       <td className="py-3 px-4">
                         <span className="bg-gray-100 text-gray-700 text-[11px] font-semibold px-2 py-0.5 rounded">

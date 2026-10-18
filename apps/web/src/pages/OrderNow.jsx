@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { cartAtom, cartTotalAtom, activeTabAtom, notificationAtom } from '../store/atoms';
-import { ordersApi } from '../services/apiClient';
+import { cartAtom, cartTotalAtom, activeTabAtom, notificationAtom, customerSessionAtom } from '../store/atoms';
+import { ordersApi, apiErrorMessage } from '../services/apiClient';
 import { COMPANY_DETAILS, PRODUCTS_DATA } from '../data/productsData';
 import { 
   ShoppingBag, Plus, Minus, Trash2, Send, CheckCircle, 
   Building, User, Mail, Phone, MapPin, Calendar, FileText, 
-  MessageSquare, ArrowLeft, Printer, ShieldCheck, Download 
+  MessageSquare, ArrowLeft, Printer, ShieldCheck, Download, LogIn 
 } from 'lucide-react';
 
 export default function OrderNow() {
@@ -14,6 +14,7 @@ export default function OrderNow() {
   const [cartTotal] = useAtom(cartTotalAtom);
   const [, setActiveTab] = useAtom(activeTabAtom);
   const [, setNotification] = useAtom(notificationAtom);
+  const [session, setSession] = useAtom(customerSessionAtom);
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -25,6 +26,19 @@ export default function OrderNow() {
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     notes: '',
   });
+
+  // Prefill contact details from the logged-in account
+  useEffect(() => {
+    const u = session?.user;
+    if (!u) return;
+    setFormData((f) => ({
+      ...f,
+      companyName: f.companyName || u.companyName || '',
+      contactPerson: f.contactPerson || u.name || '',
+      email: f.email || u.email || '',
+      phone: f.phone || u.phone || '',
+    }));
+  }, [session?.user?.id]);
 
   const [submitting, setSubmitting] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState(null);
@@ -64,6 +78,11 @@ export default function OrderNow() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!session?.token) {
+      setActiveTab('account');
+      return;
+    }
+
     if (cart.length === 0) {
       alert('Please add at least one produce item to your order before submitting.');
       return;
@@ -97,13 +116,19 @@ export default function OrderNow() {
     };
 
     try {
-      const response = await ordersApi.createOrder(orderPayload);
+      const response = await ordersApi.createOrder(orderPayload, session.token);
       setSubmittedOrder(response);
       setCart([]); // Reset cart
       setNotification('Order submitted successfully to V&F Admin!');
     } catch (error) {
       console.error('Error submitting order:', error);
-      alert('An error occurred submitting your order. Please try again.');
+      if (error?.response?.status === 401) {
+        setSession(null);
+        alert('Your session has expired. Please log in again to submit your order.');
+        setActiveTab('account');
+      } else {
+        alert(apiErrorMessage(error, 'An error occurred submitting your order. Please try again.'));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -144,7 +169,7 @@ export default function OrderNow() {
       <div className="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white rounded-3xl p-8 shadow-lg">
         <div className="flex items-center gap-2 text-brand-gold font-bold text-xs uppercase tracking-wider mb-1">
           <ShoppingBag className="w-4 h-4" />
-          <span>B2B Quotation & Order Builder</span>
+          <span>B2B Quotation &amp; Cart</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold font-heading">
           Submit Produce Order Request
@@ -240,7 +265,7 @@ export default function OrderNow() {
           </div>
         </div>
       ) : (
-        /* Order Builder Form */
+        /* Cart Form */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left Column: Cart Items List */}
@@ -275,9 +300,20 @@ export default function OrderNow() {
                         onClick={() => handleQuickAdd(p)}
                         className="p-3 hover:bg-brand-50 cursor-pointer flex justify-between items-center text-xs font-semibold"
                       >
-                        <div>
-                          <span className="text-gray-900">{p.name}</span>
-                          {p.kinyarwanda && <span className="text-brand-700 ml-2">({p.kinyarwanda})</span>}
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={p.image || p.imageUrl}
+                            alt={p.name}
+                            className="w-8 h-8 rounded-lg object-cover bg-gray-100 border border-gray-200"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80';
+                            }}
+                          />
+                          <div>
+                            <span className="text-gray-900">{p.name}</span>
+                            {p.kinyarwanda && <span className="text-brand-700 ml-2">({p.kinyarwanda})</span>}
+                          </div>
                         </div>
                         <span className="text-brand-800 font-bold">{p.price.toLocaleString()} RWF / {p.unit} +</span>
                       </div>
@@ -304,11 +340,22 @@ export default function OrderNow() {
                     const lineTotal = item.product.price * item.quantity;
                     return (
                       <div key={item.product.id} className="py-3 flex items-center justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-gray-900 truncate">{item.product.name}</h4>
-                          <p className="text-xs text-gray-500">
-                            {item.product.price.toLocaleString()} RWF per {item.product.unit}
-                          </p>
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <img
+                            src={item.product.image || item.product.imageUrl}
+                            alt={item.product.name}
+                            className="w-12 h-12 rounded-xl object-cover bg-gray-100 shrink-0 border border-gray-200"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80';
+                            }}
+                          />
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-gray-900 truncate">{item.product.name}</h4>
+                            <p className="text-xs text-gray-500">
+                              {item.product.price.toLocaleString()} RWF per {item.product.unit}
+                            </p>
+                          </div>
                         </div>
 
                         {/* Quantity Controls */}
@@ -380,6 +427,21 @@ export default function OrderNow() {
           {/* Right Column: Company & Delivery Form */}
           <div className="lg:col-span-5">
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-5">
+              {!session?.token && (
+                <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                  <p className="text-xs text-brand-900 font-semibold">
+                    Please log in or create an account so we know who is ordering.
+                  </p>
+                  <button
+                    id="cart-login-prompt"
+                    type="button"
+                    onClick={() => setActiveTab('account')}
+                    className="bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 shrink-0"
+                  >
+                    <LogIn className="w-3.5 h-3.5" /> Log in / Register
+                  </button>
+                </div>
+              )}
               <div className="border-b border-gray-100 pb-4">
                 <h3 className="font-extrabold text-xl text-gray-900 font-heading">Client Delivery Details</h3>
                 <p className="text-xs text-gray-500 mt-0.5">Please provide your business and contact info for the quotation contract.</p>

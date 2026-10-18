@@ -18,6 +18,7 @@ model Product {
   category    String
   popular     Boolean  @default(false)
   inStock     Boolean  @default(true)
+  imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -42,9 +43,30 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  companyName  String?
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders       Order[]
+}
+
 model Order {
   id            String      @id @default(uuid())
   orderNumber   String      @unique
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   companyName   String
   clientType    ClientType  @default(HOTEL)
   contactPerson String

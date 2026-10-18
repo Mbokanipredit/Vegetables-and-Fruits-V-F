@@ -63,7 +63,7 @@ export default function Footer() {
                   onClick={() => setActiveTab('order')}
                   className="hover:text-brand-gold transition-colors flex items-center gap-2"
                 >
-                  › Order Now & Quote Request
+                  › Cart &amp; Quote Request
                 </button>
               </li>
               <li>
@@ -71,15 +71,15 @@ export default function Footer() {
                   onClick={() => setActiveTab('contact')}
                   className="hover:text-brand-gold transition-colors flex items-center gap-2"
                 >
-                  › Contact Us & Location Map
+                  › Contact Us &amp; Location Map
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => setActiveTab('admin')}
+                  onClick={() => setActiveTab('account')}
                   className="hover:text-brand-gold transition-colors flex items-center gap-2"
                 >
-                  › Admin Order Management
+                  › My Account / Login
                 </button>
               </li>
             </ul>
@@ -145,7 +145,17 @@ export default function Footer() {
 
         {/* Bottom copyright */}
         <div className="pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400 gap-4">
-          <p>© {new Date().getFullYear()} Vegetables and Fruits_V&F. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Vegetables and Fruits_V&amp;F. All rights reserved.
+            <button
+              id="footer-staff-link"
+              onClick={() => { setActiveTab('admin'); window.scrollTo({ top: 0 }); }}
+              className="ml-2 text-brand-800 hover:text-gray-400 transition-colors"
+              title="Staff"
+            >
+              · staff
+            </button>
+          </p>
           <p className="flex items-center gap-1">
             Official B2B Produce Supply Platform for Kigali, Rwanda.
           </p>

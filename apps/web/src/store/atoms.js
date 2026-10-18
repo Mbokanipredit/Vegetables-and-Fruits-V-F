@@ -1,13 +1,20 @@
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 
-// Active page view: 'home' | 'catalog' | 'order' | 'contact' | 'admin'
+// Active page view: 'home' | 'catalog' | 'order' | 'contact' | 'account' | 'admin'
 export const activeTabAtom = atom('home');
+
+// Customer session: { token, user } | null  (persisted)
+export const customerSessionAtom = atomWithStorage('vf_customer_session', null);
+
+// Admin session: { token, user } | null  (persisted separately)
+export const adminSessionAtom = atomWithStorage('vf_admin_session', null);
 
 // Catalog filters
 export const activeCategoryAtom = atom('All Products');
 export const searchQueryAtom = atom('');
 
-// Order Builder Cart Atom
+// Cart Atom
 // Array of { product: Item, quantity: number }
 export const cartAtom = atom([]);
 

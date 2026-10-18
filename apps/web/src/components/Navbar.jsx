@@ -1,20 +1,21 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import { activeTabAtom, cartItemCountAtom } from '../store/atoms';
-import { ShoppingBag, Phone, MapPin, Download, ShieldCheck, Menu, X, FileText } from 'lucide-react';
+import { activeTabAtom, cartItemCountAtom, customerSessionAtom } from '../store/atoms';
+import { ShoppingBag, Phone, MapPin, Download, ShieldCheck, Menu, X, FileText, User, LogIn } from 'lucide-react';
 import { COMPANY_DETAILS } from '../data/productsData';
 
 export default function Navbar() {
   const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   const [cartCount] = useAtom(cartItemCountAtom);
+  const [session] = useAtom(customerSessionAtom);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const firstName = session?.user?.name?.split(' ')[0];
 
   const navItems = [
     { id: 'home', label: 'Home' },
     { id: 'catalog', label: 'Price List & Catalog (56)' },
-    { id: 'order', label: 'Order Now / Quote Request', badge: cartCount },
+    { id: 'order', label: 'Cart', badge: cartCount },
     { id: 'contact', label: 'Contact & Map' },
-    { id: 'admin', label: 'Admin Panel' },
   ];
 
   return (
@@ -107,14 +108,27 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Action Button: Quick Quote / Cart */}
+          {/* Action Buttons: Account + Cart */}
           <div className="hidden sm:flex items-center gap-3">
             <button
+              id="nav-account"
+              onClick={() => setActiveTab('account')}
+              className={`font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 border transition-all ${
+                activeTab === 'account'
+                  ? 'bg-brand-50 border-brand-300 text-brand-800'
+                  : 'border-gray-200 text-gray-700 hover:bg-brand-50 hover:border-brand-200'
+              }`}
+            >
+              {session ? <User className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+              <span>{session ? firstName : 'Login'}</span>
+            </button>
+            <button
+              id="nav-cart"
               onClick={() => setActiveTab('order')}
               className="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 flex items-center gap-2.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>Order Builder</span>
+              <span>Cart</span>
               {cartCount > 0 && (
                 <span className="bg-white text-brand-800 text-xs font-black px-2 py-0.5 rounded-full">
                   {cartCount}
@@ -173,6 +187,18 @@ export default function Navbar() {
               </button>
             );
           })}
+          <button
+            onClick={() => {
+              setActiveTab('account');
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full text-left px-4 py-3 rounded-xl font-semibold flex items-center gap-2 transition-colors ${
+              activeTab === 'account' ? 'bg-brand-700 text-white' : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            {session ? <User className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
+            <span>{session ? `My Account (${firstName})` : 'Login / Register'}</span>
+          </button>
         </div>
       )}
     </header>
